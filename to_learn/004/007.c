@@ -18,7 +18,7 @@ typedef struct s_var
 	int width;
 	int snack_head[2];
 	char *snack;
-	int point[points_len][2];
+	int **points;
 } t_var;
 
 int draw_rect(t_var *var, int x_start, int y_start, int height, int width, int color)
@@ -46,7 +46,7 @@ int draw_serpent(t_var *var)
 	int j = 0;
 	while (j < points_len)
 	{
-		draw_rect(var, var->point[j][0], var->point[j][1], len, len, green); // draw point
+		draw_rect(var, var->points[j][0], var->points[j][1], len, len, green); // draw points
 		j++;
 	}
 
@@ -82,13 +82,69 @@ char *increase_snack(char *snack)
 	while (i < strlen(snack))
 	{
 		new_snack[i + 1] = snack[i];
-		printf("%d -> %c\n", i, snack[i]);
+		//printf("%d -> %c\n", i, snack[i]);
 		i++;
 	}
 	new_snack[i + 1] = '\0';
-	printf("========================\n");
+	//printf("========================\n");
 	free(snack);
 	return new_snack;
+}
+
+int the_num(int num)
+{
+	int a = len;
+
+	while (a + len <= num)
+		a += len;
+	return (a);
+}
+
+void generate_points(t_var *var)
+{
+	int i = 0;
+
+	while (i < points_len)
+	{
+		var->points[i][0] = the_num(rand() % var->width);
+		var->points[i][1] = the_num(rand() % var->height);
+		int j = i - 1;
+		while (j > 0)
+		{
+			if (var->points[j][0] == var->points[i][0])
+			{
+				while (var->points[j][0] == var->points[i][0])
+				{
+					var->points[i][0] = the_num(rand() % var->width);
+					printf("w7alt 1\n");
+				}
+			}
+			if (var->points[j][1] == var->points[i][1])
+			{
+				while (var->points[j][1] == var->points[i][1])
+				{
+					var->points[i][1] = the_num(rand() % var->height);
+					printf("w7alt 2\n");
+				}
+			}
+			printf("hana kan loopi\n");
+			j--;
+		}
+		printf("%d. points(%d, %d)\n", i, var->points[i][0], var->points[i][1]);
+		i++;
+	}
+}
+
+int all_points_are_eaten(int **points)
+{
+	int i = 0;
+	while (i < points_len)
+	{
+		if(points[i][0] >= 0)
+			return (0);
+		i++;
+	}
+	return (1);
 }
 
 int clicked_key(int keycode, t_var *var)
@@ -146,14 +202,14 @@ int clicked_key(int keycode, t_var *var)
 		}
 		var->snack[i] = 'r';
 	}
-	//	printf("(%d, %d) -> (%d, %d)\n", var->snack_head[0], var->snack_head[1], var->point[0], var->point[1]);
+	//	printf("(%d, %d) -> (%d, %d)\n", var->snack_head[0], var->snack_head[1], var->points[0], var->points[1]);
 
 	i = 0;
 	while (i < points_len)
 	{
-		if (var->snack_head[0] - len == var->point[i][0] && var->snack_head[1] == var->point[i][1])
+		if (var->snack_head[0] - len == var->points[i][0] && var->snack_head[1] == var->points[i][1])
 		{
-			printf("find point %d from ", i);
+			printf("find points %d from ", i);
 			if (keycode == 126)
 			{
 				printf("126 down\n");
@@ -173,24 +229,19 @@ int clicked_key(int keycode, t_var *var)
 			printf("old len %lu\n", strlen(var->snack));
 			var->snack = increase_snack(var->snack);
 			printf("new len %lu\n", strlen(var->snack));
-			var->point[i][0] = -100;
-			var->point[i][1] = -100;
+			var->points[i][0] = -100;
+			var->points[i][1] = -100;
 		}
 		i++;
 	}
 	draw_serpent(var);
+	if(all_points_are_eaten(var->points))
+		generate_points(var);
 	// draw_rect(var, 400, 250, len, len, red);
 	return (0);
 }
 
-int the_num(int num)
-{
-	int a = len;
 
-	while (a + len <= num)
-		a += len;
-	return (a);
-}
 
 int main(void)
 {
@@ -200,46 +251,20 @@ int main(void)
 	var.height = 250;
 	var.mlx = mlx_init();
 	var.win = mlx_new_window(var.mlx, var.width, var.height, "Hello world!");
-
+	var.points = malloc(points_len * sizeof(int *));
 	int i = 0;
-
 	while (i < points_len)
 	{
-		var.point[i][0] = the_num(rand() % var.width);
-		var.point[i][1] = the_num(rand() % var.height);
-		int j = i - 1;
-		while (j > 0)
-		{
-			if (var.point[j][0] == var.point[i][0])
-			{
-				while (var.point[j][0] == var.point[i][0])
-				{
-					var.point[i][0] = the_num(rand() % var.width);
-					printf("w7alt 1\n");
-				}
-			}
-			if (var.point[j][1] == var.point[i][1])
-			{
-				while (var.point[j][1] == var.point[i][1])
-				{
-					var.point[i][1] = the_num(rand() % var.height);
-					printf("w7alt 2\n");
-				}
-			}
-			printf("hana kan loopi\n");
-			j--;
-		}
-		printf("%d. point(%d, %d)\n", i, var.point[i][0], var.point[i][1]);
+		var.points[i] = malloc(2 * sizeof(int));
 		i++;
 	}
-
+	generate_points(&var);
 	var.snack = malloc(5);
 	var.snack[0] = 'r';
 	var.snack[1] = 'r';
 	var.snack[2] = 'r';
 	var.snack[3] = 'd';
 	var.snack[4] = 'r';
-
 	var.snack_head[0] = 80;
 	var.snack_head[1] = 40;
 
