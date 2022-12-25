@@ -1,6 +1,5 @@
 #include <mlx.h>
 #include <stdio.h>
-#include <math.h>
 
 typedef struct s_var
 {
@@ -16,30 +15,33 @@ int func()
 	return (0);
 }
 
-int circle(t_var *var, int x_center, int y_center, int radius, int color, int angle_star, int angle_end)
+int circle(t_var *var, int x_center, int y_center, int radius, int color)
 {
 	int x;
 	int y;
+	int X;
+	int Y;
 
-	x = x_center;
+	x = x_center - radius;
 	while (x < x_center + radius)
 	{
-		y = y_center;
-		while (y > y_center - radius)
+		y = y_center - radius;
+		while (y < y_center + radius)
 		{
-			mlx_pixel_put(var->mlx, var->win, x, y, color);
-			y--;
+			X = x_center - x;
+			Y = y_center - y;
+			if (X * X + Y * Y <= radius * radius)
+				mlx_pixel_put(var->mlx, var->win, x, y, color);
+			y++;
 		}
 		x++;
 	}
-	
-
 	return (0);
 }
 
 int draw(t_var *var)
 {
-	circle(var, var->width / 2, var->height / 2, 50, 0xff0000, 0 ,60);
+	circle(var, var->width / 2, var->height / 2, 50, 0xff0000);
 	return (0);
 }
 
