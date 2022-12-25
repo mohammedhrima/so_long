@@ -1,0 +1,4 @@
+man /usr/share/man/man3/mlx_new_window.1
+man /usr/share/man/man3/mlx_pixel_put.1
+
+search for how colors are stored in graphic memory
