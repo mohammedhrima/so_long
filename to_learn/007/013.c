@@ -195,7 +195,7 @@ int main(void)
 	var.win_width = 1000;
 	var.mlx = mlx_init();
 	var.win = mlx_new_window(var.mlx, var.win_width, var.win_height, "my image");
-	var.keycode = 124; // right
+	var.keycode = right; // right
 	var.speed = 2;
 
 	// rectangle where we will put the image
@@ -206,7 +206,7 @@ int main(void)
 	var.img.ptr = mlx_xpm_file_to_image(var.mlx, "img/006.xpm", &var.img.width, &var.img.height);
 	var.img.pixels = (unsigned int *)mlx_get_data_addr(var.img.ptr, &var.img.bits_per_pixel, &var.img.line_length, &var.img.endian);
 
-	mlx_loop_hook(var.mlx, loop, &var);
+//	mlx_loop_hook(var.mlx, loop, &var);
 	mlx_loop_hook(var.mlx, loop, &var);
 	mlx_hook(var.win, 2,0, func, &var);
 
