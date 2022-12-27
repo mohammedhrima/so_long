@@ -2,13 +2,17 @@
 #include <stdio.h>
 #define red 0xff0000
 #define green 0x0000FF00
-#define blue 0x000000FF
+#define blue0 0x000000FF
+#define blue1 0xffff
 
 typedef struct s_img
 {
 	int width;
 	int height;
 	unsigned int *pixels;
+	int bits_per_pixel;
+	int line_length;
+	int endian;
 	void *ptr;
 } t_img;
 
@@ -58,42 +62,53 @@ void my_mlx_pixel_put(t_var *data, int x, int y, int color)
 	- data->line_length >= width_image * bytes_per_pixel , //how much pixel in the width of image + (0 or some bytes)
 	*/
 }
-
-void draw_image(t_var *var, t_img *img, int x_start, int y_start, int x_end, int y_end)
+/*
+void put_pixel(t_var *var, t_img *img, int x, int y)
 {
-	int min_x = x_start;
-	int min_y  = y_start;
-	int width = x_end - x_start;
-	int height = y_end - y_start;
+	float fx = (float)(x - min_x) / width;
+	float fy = (float)(y - min_y) / height;
+}*/
 
-	if (x_start < 0) x_start = 0;
-	if (x_end >= var->win_width) x_end = var->win_width;
-	if (y_start < 0) y_start = 0;
-	if (y_end >= var->win_height) y_end = var->win_height;
+void draw_image(t_var *var, t_img *img, int x_start, int y_start, /*int x_end, int y_end,*/ int scale) // change scale to float
+{
+
+	int width = var->img.width / scale;
+	int height = var->img.height / scale;
+
+	int min_x = x_start;
+	int min_y = y_start;
+	int x_end = x_start + width;
+
+	if (x_start < 0)
+		x_start = 0;
+
+	/*if (x_end > var->win_width)
+		x_end = var->win_width;*/
 
 	int x, y;
 	y = y_start;
 
-	while (y < y_end)
+	while (y < y_start + height)
 	{
 		x = x_start;
+
+		
 		while (x < x_end)
 		{
 			float fx = (float)(x - min_x) / width;
 			float fy = (float)(y - min_y) / height;
 
-			int img_x = fx * img->width;
-			int img_y = fy * img->height;
+			int img_x = fx * img->width; // because we will take pixels from img
+			int img_y = fy * img->height; // because we will take pixels from img
 
-			unsigned int color = img->pixels[img_y * img->width + img_x];
+			int index1 = img_y * img->width + img_x;
+			//if();
+			int index2 = (y % var->win_height) * var->win_width + x % var->win_width;
+			//if(index2 > var->line_length * var->bits_per_pixel)
+			//	printf("out\n");
+			var->img_arr[index2] = img->pixels[index1];
 
-			int index = y * var->win_width + x;
-			/*while (index >= var->line_length * y)
-			{
-				index--;
-			}*/
-			
-			var->img_arr[index] = color;
+		//	printf("%d, line lenght: %d, bits per pixel: %d, index2: %d\n", x, var->line_length, var->bits_per_pixel, index2);
 			x++;
 		}
 		y++;
@@ -103,12 +118,13 @@ void draw_image(t_var *var, t_img *img, int x_start, int y_start, int x_end, int
 int loop(t_var *var)
 {
 	static int i = 0;
-	draw_rect(var, 0, 0, var->win_width, var->win_height, 0xffff); // background
+	draw_rect(var, 0, 0, var->win_width, var->win_height, blue1); // background
 
-	draw_image(var, &var->img, i, 0, i + var->img.width / 2, var->img.height / 2); // we draw image where we will put the image
+	draw_image(var, &var->img, i, i + 1, 2); // we draw the_made_image where we will put the image
+
 	mlx_put_image_to_window(var->mlx, var->win, var->img_ptr, 0, 0);
-	printf("%d. line lenght: %d, bits per pixel: %d, endian: %d\n",i, var->line_length, var->bits_per_pixel, var->endian);
-	i += 4;
+	// printf("%d. line lenght: %d, bits per pixel: %d, endian: %d\n",i, var->line_length, var->bits_per_pixel, var->endian);
+	i += 2;
 	return 0;
 }
 
@@ -123,12 +139,11 @@ int main(void)
 
 	// rectangle where we will put the image
 	var.img_ptr = mlx_new_image(var.mlx, var.win_width, var.win_height);
-	//int bits_per_pixel, size_line, endian;
 	var.img_arr = (unsigned int *)mlx_get_data_addr(var.img_ptr, &var.bits_per_pixel, &var.line_length, &var.endian);
 
 	// put image in rectangle
 	var.img.ptr = mlx_xpm_file_to_image(var.mlx, "img/006.xpm", &var.img.width, &var.img.height);
-	var.img.pixels = (unsigned int *)mlx_get_data_addr(var.img.ptr, &var.bits_per_pixel, &var.line_length, &var.endian);
+	var.img.pixels = (unsigned int *)mlx_get_data_addr(var.img.ptr, &var.img.bits_per_pixel, &var.img.line_length, &var.img.endian);
 
 	mlx_loop_hook(var.mlx, loop, &var);
 	printf("image width: %d\n", var.img.width);

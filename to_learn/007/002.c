@@ -67,9 +67,11 @@ void draw_image(t_var *var, t_img *img, int x_start, int y_start, int x_end, int
 	int height = y_end - y_start;
 
 	if (x_start < 0) x_start = 0;
-	if (x_end >= var->win_width) x_end = var->win_width;
-	if (y_start < 0) y_start = 0;
-	if (y_end >= var->win_height) y_end = var->win_height;
+	//if(x_start + var->img.width > var->win_width)
+	
+	//if (x_end >= var->win_width) x_end = var->win_width;
+	//if (y_start < 0) y_start = 0;
+	//if (y_end >= var->win_height) y_end = var->win_height;
 
 	int x, y;
 	y = y_start;
@@ -85,15 +87,13 @@ void draw_image(t_var *var, t_img *img, int x_start, int y_start, int x_end, int
 			int img_x = fx * img->width;
 			int img_y = fy * img->height;
 
-			unsigned int color = img->pixels[img_y * img->width + img_x];
-
-			int index = y * var->win_width + x;
-			/*while (index >= var->line_length * y)
-			{
-				index--;
-			}*/
-			
-			var->img_arr[index] = color;
+			int index1 = img_y * img->width + img_x;
+			//printf("line lenght: %d, bits per pixel: %d, index1: %d\n",var->line_length, var->bits_per_pixel, index1);
+			unsigned int color = img->pixels[index1];
+		
+			int index2 = y * var->win_width + x;
+			printf("line lenght: %d, bits per pixel: %d, index2: %d\n",var->line_length, var->bits_per_pixel, index2);
+			var->img_arr[index2] = color;
 			x++;
 		}
 		y++;
@@ -107,8 +107,8 @@ int loop(t_var *var)
 
 	draw_image(var, &var->img, i, 0, i + var->img.width / 2, var->img.height / 2); // we draw image where we will put the image
 	mlx_put_image_to_window(var->mlx, var->win, var->img_ptr, 0, 0);
-	printf("%d. line lenght: %d, bits per pixel: %d, endian: %d\n",i, var->line_length, var->bits_per_pixel, var->endian);
-	i += 4;
+	//printf("%d. line lenght: %d, bits per pixel: %d, endian: %d\n",i, var->line_length, var->bits_per_pixel, var->endian);
+	i += 10;
 	return 0;
 }
 

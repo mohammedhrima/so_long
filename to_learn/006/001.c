@@ -310,6 +310,6 @@ int main(void)
 	int bits_per_pixel, size_line, endian;
 	var.draw_image = (unsigned int *)mlx_get_data_addr(var.img_ptr, &bits_per_pixel, &size_line, &endian);
 	mlx_loop_hook(var.mlx, loop, &var);
-	mlx_key_hook(var.win, clicked_key, &var);
+	mlx_key_hook(var.win, clicked_key, &var); //use mlx_hook check documentation
 	mlx_loop(var.mlx);
 }
