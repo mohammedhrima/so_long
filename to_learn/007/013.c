@@ -179,6 +179,13 @@ int loop(t_var *var)
 	//}
 	return (0);
 }*/
+int func(int keycode, t_var var)
+{
+	printf("keycode: %d\n", keycode);
+	if(keycode == right)
+		printf("right\n");
+	return (0);
+}
 
 int main(void)
 {
@@ -201,10 +208,11 @@ int main(void)
 
 	mlx_loop_hook(var.mlx, loop, &var);
 	mlx_loop_hook(var.mlx, loop, &var);
+	mlx_hook(var.win, 2,0, func, &var);
 
-	// mlx_loop_hook(var.mlx, print_msg, &var);
-	/*var.isclick =*/mlx_key_hook(var.win, clicked_key, &var); // use mlx_hook check documentation
-	printf("image width: %d\n", var.img.width);
+		// mlx_loop_hook(var.mlx, print_msg, &var);
+		/*var.isclick =*/ // mlx_key_hook(var.win, clicked_key, &var); // use mlx_hook check documentation
+		printf("image width: %d\n", var.img.width);
 	printf("image height %d\n", var.img.height);
 	mlx_loop(var.mlx);
 };
