@@ -1,0 +1,30 @@
+man /usr/share/man/man3/mlx_new_window.1
+man /usr/share/man/man3/mlx_pixel_put.1
+
+search for how colors are stored in graphic memory
+- always: include <mlx.h> and call mlx_init() to start / if it fails it returns NULL
+- when compiling add: -lmlx -framework -OpenGL -framework AppKit -L /usr/local/lib
+
++ mlx_new_window: (manage window)
+    + mlx_clear_window
+    + mlx_destroy_window
+
++ mlx_pixel_put : (draw inside window)
+    + mlx_pixel_put
+    + mlx_string_put
+  
++ mlx_new_image : manipulate images
++ mlx_loop : handle keyboard or mouse events / I guess it render to page to the window
+
+
+==========================================================================================
+1. void* mlx_new_window(void *mlx_ptr, int size_x, int size_y, char *title):
+  1.1 int mlx_clear_window(void *mlx_ptr, void *win_ptr)
+  1.2 int mlx_destroy_window(void *mlx_ptr, void *win_ptr)
+
+2. int mlx_pixel_put(void *)
+
+
+
+
+clicking on key continutialy ?
