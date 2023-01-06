@@ -1,0 +1,68 @@
+"*" anything done
+
+- build yellow packman
+==================================================================
+
+- background setting
+
+- exit in error
+- player lose when they touch enemy
+- sprite animation
+- use WASD and keys to move
+- program must take map as .ber file
+- collect all collective then escape the map 
+- shosing the shortest possible route
+- player should not be able to move throw walls
+- display the number of move
+- image in background
+- ESC to exit
+- X button close window and quit program !!
+- enemies and packk man should have the same size
+
+==================================================================
+- map:
+	0 empty space
+	1 walls
+	C collectible
+	E map exit
+	P player starting point
+
+* check that map is rectangle
+* check that the map is closed
+* 1 player / 1 exit / at least 1 Collectible
+* check if there is only one player one exit
+* read from map and store in a string and put it in a string
+* check for valid character
+* set a len , check if len is different it means is not rectangle
+* check if two new lines are mtab3ine
+- dont'start the game if there is no valid path
+- check that map len is 3 or more
+* handle each error y it's meaning
+- set WINDOW_WIDTH and WINDOW_HEIGHT inside the struct
+- enemies should looks for  you
+- die when touching enemie
+
+==================================================================
+bonus:
+	display the movement count on screen instead of shell
+==================================================================
+
+
+- verify makefile before pushing (mandatory/bonus)
+- remove printfs
+- check all mallocs if they fail
+- remove libft and replace it withh files
+- verify all fd and mallocs ... if they fail
+- compile with and without sanitize / -Wall -Werror -Wextra
+
+WALLS : BLUE
+PLAYER: GREEN
+EXIT  : WHITE
+COLLEC: RED 
+
+
+
+
+check where is Player
+
+rand()%4 -> top or right or left or bottom 
