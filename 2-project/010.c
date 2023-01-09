@@ -22,11 +22,14 @@ static int KEY = RIGHT;
 
 // SETTING
 #define RADIUS 20
-static double SCALE = 10;
+static double SCALE = 40;
 
 // WINDOW SETTING
-static int WINDOW_WIDTH;
+static int  WINDOW_WIDTH;
 static int WINDOW_HEIGHT;
+
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
 
 // STRUCTURES
 typedef struct s_game
@@ -319,18 +322,25 @@ void put_one_pixel(t_var *var, int x, int y, int color)
 void put_pixels(t_var *var, int x_start, int y_start, int width, int height, int color)
 {
 	char *dst;
-	int x_end = x_start;
-	int y_end = y_start;
+	int x_end = x_start + width;
+	int y_end = y_start + height;
 
-	while (x_end - x_start < width)
+	if (x_start < 0) x_start = 0;
+	if (x_end > SCREEN_WIDTH)
+		x_end = SCREEN_WIDTH;
+	if (y_start < 0) y_start = 0;
+	if (y_end > SCREEN_HEIGHT)
+		y_end = SCREEN_HEIGHT;
+	// width--;
+	//height--;
+
+	for (int y = y_start; y < y_end; y++)
 	{
-		y_end = y_start;
-		while (y_end - y_start < height)
+		for (int x = x_start; x < x_end; x++)
 		{
-			put_one_pixel(var, x_end, y_end, color);
-			y_end++;
+			put_one_pixel(var, x, y, color);
 		}
-		x_end++;
+	
 	}
 }
 int clicked_key(int keycode, t_var *var)
@@ -428,6 +438,7 @@ int face(t_var *var, int x_center, int y_center, int radius, int color, float fr
 
 	x = x_center - radius;
 	static int last_key;
+
 	if (KEY != RIGHT && KEY != LEFT && KEY != UP && KEY != DOWN)
 	{
 		if (last_key == RIGHT || last_key == LEFT || last_key == UP || last_key == DOWN)
@@ -437,6 +448,7 @@ int face(t_var *var, int x_center, int y_center, int radius, int color, float fr
 	}
 	if (KEY == RIGHT)
 	{
+
 		while (x < x_center + radius)
 		{
 			y = y_center - radius;
@@ -448,6 +460,7 @@ int face(t_var *var, int x_center, int y_center, int radius, int color, float fr
 			}
 			x++;
 		}
+
 		x = x_center;
 		while (x < x_center + radius)
 		{
@@ -569,8 +582,8 @@ int circle(t_var *var, int x_center, int y_center, int radius, int color)
 	return (0);
 }
 
-
-
+static float px;
+static float py;
 static float q = 0.01;
 void move_enemie(t_var *var)
 {
@@ -605,7 +618,7 @@ void move_enemie(t_var *var)
 				did_move[2]++;
 				did_move[3]++;
 			}
-			else if ((var->game.map[(y - 1) * WINDOW_WIDTH + x] == 'P' || var->game.map[(y - 1) * WINDOW_WIDTH + x] == '0') )
+			else if ((var->game.map[(y - 1) * WINDOW_WIDTH + x] == 'P' || var->game.map[(y - 1) * WINDOW_WIDTH + x] == '0'))
 			{
 				var->game.Enemies[i] = (y - 1) * WINDOW_WIDTH + x;
 				var->game.map[(y - 1) * WINDOW_WIDTH + x] = 'X';
@@ -653,10 +666,16 @@ void draw_pacman(t_var *var, int x, int y, int radius)
 	frequence += fr;
 	if (frequence > 1 || frequence < 0)
 		fr = -fr;
-	x += radius;
-	y += radius;
-	// face(var, x, y, radius, BACKGROUND, 0);
-	face(var, x, y, radius, YELLOW, frequence);
+
+
+
+// face(var, x, y, radius, BACKGROUND, 0);
+// printf("%d %d %f %f\n", x, y, px, py);
+#if 0
+	face(var, px + radius, py + radius, radius, YELLOW, frequence);
+#else
+	face(var, x + radius, y + radius, radius, YELLOW, frequence);
+#endif
 }
 // MAP
 static float R = 1;
@@ -665,51 +684,86 @@ void draw_map(t_var *var)
 {
 	int i = 0;
 	int j = 0;
+	int pac_i;
+	int pac_j;
 
 	R += r;
 	if (R >= 1.1 || R <= 0.9)
 		r = -r;
+
+
 	while (i < WINDOW_HEIGHT)
 	{
 		j = 0;
 		while (j < WINDOW_WIDTH)
 		{
-			if (var->game.map[i * WINDOW_WIDTH + j] == '1')
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BLUE);
 			if (var->game.map[i * WINDOW_WIDTH + j] == 'P')
 			{
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
-				draw_pacman(var, j * SCALE, i * SCALE, SCALE / 2);
-			}
-			if (var->game.map[i * WINDOW_WIDTH + j] == 'E')
-			{
-				if (var->game.Collectlen)
-					put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, RED);
-				else
-				{
-					put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, RED);
-					put_pixels(var, j * SCALE + SCALE * 0.1, i * SCALE + SCALE * 0.1, SCALE * 0.8, SCALE * 0.8, GREEN);
-				}
-			}
-			if (var->game.map[i * WINDOW_WIDTH + j] == '0')
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
-			if (var->game.map[i * WINDOW_WIDTH + j] == 'X')
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, 0);
-			if (var->game.map[i * WINDOW_WIDTH + j] == 'C')
-			{
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
-				circle(var, j * SCALE + SCALE / 2, i * SCALE + SCALE / 2, R * SCALE / 4, ORANGE);
+				// put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
+				pac_i = i;
+				pac_j = j;
 			}
 			j++;
 		}
 		i++;
 	}
-	mlx_put_image_to_window(var->mlx, var->win, var->img, 0, 0);
+
+	
+	float speed = 1.0 / 60 * 10;
+
+	
+	px +=  (pac_j - px) * speed;
+	py += (pac_i - py) * speed;
+
+
+
+	int pac_x = SCREEN_WIDTH / 2;
+	int pac_y = SCREEN_HEIGHT / 2;
+
+
+	for (int ci = pac_i - 20; ci < pac_i + 20; ci++)
+	{
+		for (int cj = pac_j - 20; cj < pac_j + 20; cj++)
+		{
+			int s = SCALE - 1;
+			float x = pac_x + (cj - pac_j) * SCALE;
+			float y = pac_y + (ci - pac_i) * SCALE;
+
+
+			if (ci < 0 || cj < 0 || ci >= WINDOW_HEIGHT || cj >= WINDOW_WIDTH)
+				put_pixels(var, x, y, s, s, 0);
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == '1')
+				put_pixels(var, x, y, s, s, BLUE);
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == 'E')
+			{
+				if (var->game.Collectlen)
+					put_pixels(var, x, y, s, s, RED);
+				else
+				{
+					put_pixels(var, x, y, s, s, RED);
+					//put_pixels(var, x * s + s * 0.1, y + s * 0.1, s * 0.8, s * 0.8, GREEN);
+				}
+			}
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == 'X')
+				put_pixels(var, x, y, s, s, 0);
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == 'C')
+			{
+				circle(var, x + SCALE / 2, y + SCALE / 2, R * SCALE / 4, ORANGE);
+			}
+			//else
+			//	put_pixels(var, x, y, s, s, 0);
+		}
+	}
+	draw_pacman(var, pac_x, pac_y, SCALE / 2);
 }
 int draw(t_var *var)
 {
+	// mlx_clear_window(var->mlx, var->win);
+	put_pixels(var, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,0);
+
 	draw_map(var);
-	move_enemie(var);
+	mlx_put_image_to_window(var->mlx, var->win, var->img, 0, 0);
+	// move_enemie(var);
 	return (0);
 }
 int main(void)
@@ -757,8 +811,8 @@ int main(void)
 	}
 
 	var.mlx = mlx_init();
-	var.win = mlx_new_window(var.mlx, SCALE * WINDOW_WIDTH, SCALE * WINDOW_HEIGHT, "Pacman");
-	var.img = mlx_new_image(var.mlx, SCALE * WINDOW_WIDTH, SCALE * WINDOW_HEIGHT);
+	var.win = mlx_new_window(var.mlx, SCREEN_WIDTH, SCREEN_HEIGHT, "Pacman");
+	var.img = mlx_new_image(var.mlx, SCREEN_WIDTH, SCREEN_HEIGHT);
 	var.addr = mlx_get_data_addr(var.img, &var.bits_per_pixel, &var.line_length,
 								 &var.endian);
 

@@ -54,6 +54,7 @@ bonus:
 - remove libft and replace it withh files
 - verify all fd and mallocs ... if they fail
 - compile with and without sanitize / -Wall -Werror -Wextra
+- replace for with while
 
 WALLS : BLUE
 PLAYER: GREEN

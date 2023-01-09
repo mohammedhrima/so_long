@@ -12,6 +12,7 @@
 #define ORANGE 0xed6a12
 #define YELLOW 0xFFFF00
 #define BACKGROUND 0X0cf3ef
+#define WHITE 0xFFFFFF
 
 // KEYS
 #define RIGHT 124
@@ -21,12 +22,15 @@
 static int KEY = RIGHT;
 
 // SETTING
-#define RADIUS 20
-static double SCALE = 10;
+
+static double SCALE = 20;
 
 // WINDOW SETTING
 static int WINDOW_WIDTH;
 static int WINDOW_HEIGHT;
+
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
 
 // STRUCTURES
 typedef struct s_game
@@ -205,7 +209,7 @@ t_game get_map(int fd)
 			free(game.Collectible);
 			free(game.map);
 			free(str);
-			ft_printf("%s",arr[-n]);
+			ft_printf("%s\n", arr[-n]);
 			exit(-1);
 		}
 		tmp = ft_strjoin(game.map, str);
@@ -314,99 +318,51 @@ void put_one_pixel(t_var *var, int x, int y, int color)
 {
 	char *dst;
 	dst = var->addr + (y * var->line_length + x * (var->bits_per_pixel / 8));
+
 	*(unsigned int *)dst = color;
 }
 void put_pixels(t_var *var, int x_start, int y_start, int width, int height, int color)
 {
 	char *dst;
-	int x_end = x_start;
-	int y_end = y_start;
+	int x_end = x_start + width;
+	int y_end = y_start + height;
 
-	while (x_end - x_start < width)
+	if (x_start < 0)
+		x_start = 0;
+	if (x_end > SCREEN_WIDTH)
+		x_end = SCREEN_WIDTH;
+	if (y_start < 0)
+		y_start = 0;
+	if (y_end > SCREEN_HEIGHT)
+		y_end = SCREEN_HEIGHT;
+	// width--;
+	// height--;
+
+	for (int y = y_start; y < y_end; y++)
 	{
-		y_end = y_start;
-		while (y_end - y_start < height)
+		for (int x = x_start; x < x_end; x++)
 		{
-			put_one_pixel(var, x_end, y_end, color);
-			y_end++;
+			put_one_pixel(var, x, y, color);
 		}
-		x_end++;
 	}
 }
+int pacman_dx = 0;
+int pacman_dy = 0;
+
 int clicked_key(int keycode, t_var *var)
 {
 	int x = var->game.Player % WINDOW_WIDTH;
 	int y = var->game.Player / WINDOW_WIDTH; // -2 for walls left and right
 	KEY = keycode;
-	if (keycode == RIGHT && ((var->game.map[y * WINDOW_WIDTH + x + 1] != '1' && var->game.map[y * WINDOW_WIDTH + x + 1] != 'E') || (var->game.Collectlen == 0 && var->game.map[y * WINDOW_WIDTH + x + 1] == 'E')))
-	{
-		if (var->game.map[y * WINDOW_WIDTH + x + 1] == 'X')
-		{
-			printf("You did touch enemie\n");
-			exit(1);
-		}
-		if (var->game.map[y * WINDOW_WIDTH + x + 1] == 'E')
-		{
-			printf("See ya\n");
-			exit(0);
-		}
-		var->game.map[var->game.Player] = '0';
-		var->game.Player = y * WINDOW_WIDTH + x + 1;
-	}
-	if (keycode == LEFT && ((var->game.map[y * WINDOW_WIDTH + x - 1] != '1' && var->game.map[y * WINDOW_WIDTH + x - 1] != 'E') || (var->game.Collectlen == 0 && var->game.map[y * WINDOW_WIDTH + x - 1] == 'E')))
-	{
-		if (var->game.map[y * WINDOW_WIDTH + x - 1] == 'X')
-		{
-			printf("You did touch enemie\n");
-			exit(1);
-		}
-		if (var->game.map[y * WINDOW_WIDTH + x - 1] == 'E')
-		{
-			printf("See ya\n");
-			exit(0);
-		}
-		var->game.map[var->game.Player] = '0';
-		var->game.Player = y * WINDOW_WIDTH + x - 1;
-	}
-	if (keycode == UP && ((var->game.map[(y - 1) * WINDOW_WIDTH + x] != '1' && var->game.map[(y - 1) * WINDOW_WIDTH + x] != 'E') || (var->game.Collectlen == 0 && var->game.map[(y - 1) * WINDOW_WIDTH + x] == 'E')))
-	{
-		if (var->game.map[(y - 1) * WINDOW_WIDTH + x] == 'X')
-		{
-			printf("You did touch enemie\n");
-			exit(1);
-		}
-		if (var->game.map[(y - 1) * WINDOW_WIDTH + x] == 'E')
-		{
-			printf("See ya\n");
-			exit(0);
-		}
-		var->game.map[var->game.Player] = '0';
-		var->game.Player = (y - 1) * WINDOW_WIDTH + x;
-	}
-	if (keycode == DOWN && ((var->game.map[(y + 1) * WINDOW_WIDTH + x] != '1' && var->game.map[(y + 1) * WINDOW_WIDTH + x] != 'E') || (var->game.Collectlen == 0 && var->game.map[(y + 1) * WINDOW_WIDTH + x] == 'E')))
-	{
-		if (var->game.map[(y + 1) * WINDOW_WIDTH + x] == 'X')
-		{
-			printf("You did touch enemie\n");
-			exit(1);
-		}
-		if (var->game.map[(y + 1) * WINDOW_WIDTH + x] == 'E')
-		{
-			printf("See ya\n");
-			exit(0);
-		}
-		var->game.map[var->game.Player] = '0';
-		var->game.Player = (y + 1) * WINDOW_WIDTH + x;
-	}
-	if (var->game.map[var->game.Player] == 'C')
-	{
-		var->game.Collectlen--;
-		printf("Good job: %d\n", var->game.Collectlen);
-		if (var->game.Collectlen == 0)
-			printf("Got all Collectible\n");
-	}
 
-	var->game.map[var->game.Player] = 'P';
+	if (keycode == LEFT)
+		pacman_dx = -1, pacman_dy = 0;
+	else if (keycode == RIGHT)
+		pacman_dx = 1, pacman_dy = 0;
+	else if (keycode == UP)
+		pacman_dy = -1, pacman_dx = 0;
+	else if (keycode == DOWN)
+		pacman_dy = 1, pacman_dx = 0;
 	return (0);
 }
 // Pacman
@@ -428,6 +384,7 @@ int face(t_var *var, int x_center, int y_center, int radius, int color, float fr
 
 	x = x_center - radius;
 	static int last_key;
+
 	if (KEY != RIGHT && KEY != LEFT && KEY != UP && KEY != DOWN)
 	{
 		if (last_key == RIGHT || last_key == LEFT || last_key == UP || last_key == DOWN)
@@ -437,6 +394,7 @@ int face(t_var *var, int x_center, int y_center, int radius, int color, float fr
 	}
 	if (KEY == RIGHT)
 	{
+
 		while (x < x_center + radius)
 		{
 			y = y_center - radius;
@@ -448,6 +406,7 @@ int face(t_var *var, int x_center, int y_center, int radius, int color, float fr
 			}
 			x++;
 		}
+
 		x = x_center;
 		while (x < x_center + radius)
 		{
@@ -549,8 +508,6 @@ int circle(t_var *var, int x_center, int y_center, int radius, int color)
 {
 	int x;
 	int y;
-	int X;
-	int Y;
 
 	x = x_center - radius;
 	while (x < x_center + radius)
@@ -558,9 +515,7 @@ int circle(t_var *var, int x_center, int y_center, int radius, int color)
 		y = y_center - radius;
 		while (y < y_center + radius)
 		{
-			X = x_center - x;
-			Y = y_center - y;
-			if (X * X + Y * Y <= radius * radius)
+			if (pow2(x_center - x) + pow2(y_center - y) <= pow2(radius))
 				put_pixels(var, x, y, 1, 1, color);
 			y++;
 		}
@@ -568,95 +523,167 @@ int circle(t_var *var, int x_center, int y_center, int radius, int color)
 	}
 	return (0);
 }
+//////////
+// Enemies
 
-
-
-static float q = 0.01;
-void move_enemie(t_var *var)
+int head(t_var *var, int x_center, int y_center, int radius, int color)
 {
-	int i = 0;
 	int x;
 	int y;
-	int just_move = rand() % 4;
-	int did_move[4];
-	int Player_x = var->game.Player % WINDOW_WIDTH;
-	int Playe_y = var->game.Player / WINDOW_HEIGHT;
 
-	while (i < var->game.Enemlen)
+	x = x_center - radius;
+	while (x < x_center + radius)
 	{
-		if (q <= 0.5)
+		y = y_center - radius;
+		while (y < y_center)
 		{
-			did_move[0]--;
-			did_move[1]--;
-			did_move[2]--;
-			did_move[3]--;
+			if (pow2(x_center - x) + pow2(y_center - y) <= pow2(radius) && x >= 0 && y >= 0 && x < SCREEN_WIDTH && y < SCREEN_HEIGHT)
+				put_one_pixel(var, x, y, color);
+			y++;
 		}
-		if (q > 1)
-		{
-			x = var->game.Enemies[i] % WINDOW_WIDTH;
-			y = var->game.Enemies[i] / WINDOW_WIDTH;
-			var->game.map[y * WINDOW_WIDTH + x] = '0';
-			if (Player_x >= x && (var->game.map[y * WINDOW_WIDTH + x + 1] == 'P' || var->game.map[y * WINDOW_WIDTH + x + 1] == '0'))
-			{
-				var->game.Enemies[i] = y * WINDOW_WIDTH + x + 1;
-				var->game.map[y * WINDOW_WIDTH + x + 1] = 'X';
-				did_move[0]--;
-				did_move[1]++;
-				did_move[2]++;
-				did_move[3]++;
-			}
-			else if ((var->game.map[(y - 1) * WINDOW_WIDTH + x] == 'P' || var->game.map[(y - 1) * WINDOW_WIDTH + x] == '0') )
-			{
-				var->game.Enemies[i] = (y - 1) * WINDOW_WIDTH + x;
-				var->game.map[(y - 1) * WINDOW_WIDTH + x] = 'X';
-				did_move[0]--;
-				did_move[1]--;
-				did_move[2]++;
-				did_move[3]++;
-			}
-			else if ((var->game.map[y * WINDOW_WIDTH + x - 1] == 'P' || var->game.map[y * WINDOW_WIDTH + x - 1] == '0'))
-			{
-				var->game.Enemies[i] = y * WINDOW_WIDTH + x - 1;
-				var->game.map[y * WINDOW_WIDTH + x - 1] = 'X';
-				just_move = 'u';
-				did_move[0]++;
-				did_move[1]++;
-				did_move[2]--;
-				did_move[3]++;
-			}
-			else if ((var->game.map[(y + 1) * WINDOW_WIDTH + x] == 'P' || var->game.map[(y + 1) * WINDOW_WIDTH + x] == '0') && did_move[3])
-			{
-				var->game.Enemies[i] = (y + 1) * WINDOW_WIDTH + x;
-				var->game.map[(y + 1) * WINDOW_WIDTH + x] = 'X';
-				did_move[0]++;
-				did_move[1]++;
-				did_move[2]--;
-				did_move[3]--;
-			}
-			else
-			{
-				var->game.Enemies[i] = y * WINDOW_WIDTH + x;
-				var->game.map[y * WINDOW_WIDTH + x] = 'X';
-			}
-		}
-		i++;
+		x++;
 	}
-	if (q >= 1)
-		q = 0.01;
-	q += 0.04;
+	return (0);
+}
+static float z = 4;
+float ii = -0.5;
+void draw_enemy(t_var *var, int x, int y, int radius)
+{
+
+	z += ii;
+	if (z == 4)
+		ii = -0.5;
+	if (z < -4)
+		ii = 0.5;
+
+	// put_pixels(var, x, y, 2 * radius, 2 * radius, 0);
+
+	// face + body
+	head(var, x + radius, y + radius, radius, YELLOW);
+	put_pixels(var, x, y + radius, radius * 2, radius, YELLOW);
+	// eyes
+	circle(var, x + radius * 0.6, y + radius / 2, radius / 4, WHITE);	  // left eye
+	circle(var, x + radius * 1.4, y + radius / 2, radius / 4, WHITE);	  // right eye
+	circle(var, x + radius * 0.6 + z, y + radius / 2 + 2, radius / 8, 0); // left eye
+	circle(var, x + radius * 1.4 + z, y + radius / 2 + 2, radius / 8, 0); // right eye
+
+	// legs
+	// mlx_put_image_to_window(var->mlx, var->win, var->img, 0, 0);
+}
+
+/////////
+static float pacman_vx;
+static float pacman_vy;
+static float q = 0.01;
+
+typedef struct pair_s
+{
+	int p;
+	int prev;
+} pair_t;
+
+void go(int c, int dx, int dy, pair_t *q, int *r, int *visited)
+{
+	int x = c % WINDOW_WIDTH + dx;
+	int y = c / WINDOW_WIDTH + dy;
+	int p = y * WINDOW_WIDTH + x;
+	if (!visited[p])
+	{
+		visited[p] = 1;
+		q[*r].p = p;
+		int prev = LEFT;
+		if (dx < 0)
+			prev = RIGHT;
+		if (dy < 0)
+			prev = DOWN;
+		if (dy > 0)
+			prev = UP;
+		q[*r].prev = prev;
+		*r = *r + 1;
+	}
+}
+
+void move_enemie(t_var *var, int x, int y, int last)
+{
+	int *visited = calloc(WINDOW_WIDTH * WINDOW_HEIGHT, sizeof(int));
+	pair_t *q = malloc(WINDOW_WIDTH * WINDOW_HEIGHT * sizeof(pair_t));
+
+	int l = 0;
+	int r = 0;
+
+	q[r].p = y * WINDOW_WIDTH + x;
+	q[r].prev = 0;
+	r++;
+
+	while (l < r)
+	{
+		int curr = q[l].p;
+		int prev = q[l].prev;
+
+		l++;
+		int cx = curr % WINDOW_WIDTH;
+		int cy = curr / WINDOW_WIDTH;
+		if (cx < 0 || cx >= WINDOW_WIDTH || cy < 0 || cy >= WINDOW_HEIGHT || var->game.map[curr] == '1' || var->game.map[curr] == 'E')
+			continue;
+		for (int i = 0; i < var->game.Enemlen; i++)
+		{
+			if (var->game.Enemies[i] == curr)
+			{
+				int dx = 0, dy = 0;
+				if (prev == UP)
+					dy--;
+				else if (prev == DOWN)
+					dy++;
+				else if (prev == LEFT)
+					dx--;
+				else if (prev == RIGHT)
+					dx++;
+				int ex = var->game.Enemies[i] % WINDOW_WIDTH;
+				int ey = var->game.Enemies[i] / WINDOW_WIDTH;
+
+				ex += dx;
+				ey += dy;
+
+				if (var->game.map[ey * WINDOW_WIDTH + ex] != 'X')
+				{
+					if (ey * WINDOW_WIDTH + ex == var->game.Player)
+					{
+						printf("Enemie did hit you\n");
+						exit(0);
+					}
+					var->game.map[var->game.Enemies[i]] = '0';
+					var->game.Enemies[i] = ey * WINDOW_WIDTH + ex;
+					var->game.map[var->game.Enemies[i]] = 'X';
+				}
+			}
+		}
+
+		go(curr, 1, 0, q, &r, visited);
+		go(curr, -1, 0, q, &r, visited);
+		go(curr, 0, 1, q, &r, visited);
+		go(curr, 0, -1, q, &r, visited);
+	}
+
+	free(q);
+	free(visited);
 }
 
 static float frequence = 0.5;
 static float fr = 0.1;
+
 void draw_pacman(t_var *var, int x, int y, int radius)
 {
 	frequence += fr;
 	if (frequence > 1 || frequence < 0)
 		fr = -fr;
-	x += radius;
-	y += radius;
-	// face(var, x, y, radius, BACKGROUND, 0);
-	face(var, x, y, radius, YELLOW, frequence);
+
+// face(var, x, y, radius, BACKGROUND, 0);
+// printf("%d %d %f %f\n", x, y, pacman_vx,	pacman_vy);
+#if 0
+	face(var, pacman_vx + radius,	pacman_vy + radius, radius, YELLOW, frequence);
+#else
+	face(var, x + radius, y + radius, radius, YELLOW, frequence);
+#endif
 }
 // MAP
 static float R = 1;
@@ -665,51 +692,137 @@ void draw_map(t_var *var)
 {
 	int i = 0;
 	int j = 0;
+	int pac_i;
+	int pac_j;
 
 	R += r;
 	if (R >= 1.1 || R <= 0.9)
 		r = -r;
+
 	while (i < WINDOW_HEIGHT)
 	{
 		j = 0;
 		while (j < WINDOW_WIDTH)
 		{
-			if (var->game.map[i * WINDOW_WIDTH + j] == '1')
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BLUE);
 			if (var->game.map[i * WINDOW_WIDTH + j] == 'P')
 			{
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
-				draw_pacman(var, j * SCALE, i * SCALE, SCALE / 2);
-			}
-			if (var->game.map[i * WINDOW_WIDTH + j] == 'E')
-			{
-				if (var->game.Collectlen)
-					put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, RED);
-				else
-				{
-					put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, RED);
-					put_pixels(var, j * SCALE + SCALE * 0.1, i * SCALE + SCALE * 0.1, SCALE * 0.8, SCALE * 0.8, GREEN);
-				}
-			}
-			if (var->game.map[i * WINDOW_WIDTH + j] == '0')
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
-			if (var->game.map[i * WINDOW_WIDTH + j] == 'X')
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, 0);
-			if (var->game.map[i * WINDOW_WIDTH + j] == 'C')
-			{
-				put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
-				circle(var, j * SCALE + SCALE / 2, i * SCALE + SCALE / 2, R * SCALE / 4, ORANGE);
+				// put_pixels(var, j * SCALE, i * SCALE, SCALE, SCALE, BACKGROUND);
+				pac_i = i;
+				pac_j = j;
 			}
 			j++;
 		}
 		i++;
 	}
-	mlx_put_image_to_window(var->mlx, var->win, var->img, 0, 0);
+	static int first_frame = 1;
+
+	if (first_frame)
+	{
+		pacman_vx = pac_j * SCALE;
+		pacman_vy = pac_i * SCALE;
+		first_frame = 0;
+	}
+	float speed = 1.0 / 60 * 10;
+	pacman_vx += (pac_j * SCALE - pacman_vx) * speed;
+	pacman_vy += (pac_i * SCALE - pacman_vy) * speed;
+
+	int pac_x = SCREEN_WIDTH / 2;
+	int pac_y = SCREEN_HEIGHT / 2;
+
+	for (int ci = pac_i - 100; ci < pac_i + 100; ci++)
+	{
+		for (int cj = pac_j - 100; cj < pac_j + 100; cj++)
+		{
+			int s = SCALE;
+			float x = pac_x + (cj * SCALE - pacman_vx);
+			float y = pac_y + (ci * SCALE - pacman_vy);
+
+			if (ci < 0 || cj < 0 || ci >= WINDOW_HEIGHT || cj >= WINDOW_WIDTH)
+				put_pixels(var, x, y, s, s, 0);
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == '1')
+				put_pixels(var, x, y, s, s, BLUE);
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == 'E')
+			{
+				if (var->game.Collectlen)
+					put_pixels(var, x, y, s, s, RED);
+				else
+				{
+					// put_pixels(var, x, y, s, s, RED);
+					put_pixels(var, x + s * 0.1, y + s * 0.1, s * 0.8, s * 0.8, GREEN);
+				}
+			}
+			else if (var->game.map[ci * WINDOW_WIDTH + cj] == 'C')
+			{
+				circle(var, x + SCALE / 2, y + SCALE / 2, R * SCALE / 4, ORANGE);
+			}
+
+			//	draw_pacman(var, x, y, SCALE / 2);
+			// else
+			//	put_pixels(var, x, y, s, s, 0);
+		}
+	}
+	draw_pacman(var, pac_x, pac_y, SCALE / 2);
+	static float e_x[50];
+	static float e_y[50];
+	for (int i = 0; i < var->game.Enemlen; i++)
+	{
+		int x = var->game.Enemies[i] % WINDOW_WIDTH;
+		int y = var->game.Enemies[i] / WINDOW_WIDTH;
+		float s = speed * 2;
+		e_x[i] += (x * SCALE - e_x[i]) * s;
+		e_y[i] += (y * SCALE - e_y[i]) * s;
+		// put_pixels(var, pac_x + (e_x[i] - pacman_vx), pac_y + (e_y[i] - pacman_vy), SCALE, SCALE, BACKGROUND);
+		draw_enemy(var, pac_x + (e_x[i] - pacman_vx), pac_y + (e_y[i] - pacman_vy), SCALE / 2);
+	}
+	put_pixels(var, SCREEN_WIDTH / 2 - 1, SCREEN_HEIGHT / 2 - 1, 2, 2, RED);
 }
 int draw(t_var *var)
 {
+	// mlx_clear_window(var->mlx, var->win);
+	for (int i = 0; i < SCREEN_WIDTH; i++)
+		for (int j = 0; j < SCREEN_HEIGHT; j++)
+		{
+			char *dst = var->addr + (j * var->line_length + i * (var->bits_per_pixel / 8));
+			*(unsigned int *)dst = 0;
+		}
+	// put_pixels(var, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+
+	int pacman_x = var->game.Player % WINDOW_WIDTH;
+	int pacman_y = var->game.Player / WINDOW_WIDTH;
+
+	static int f = 0;
+	f++;
+	if (f % 8 == 0)
+	{
+		pacman_x += pacman_dx;
+		pacman_y += pacman_dy;
+
+		if (pacman_x >= 0 && pacman_x < WINDOW_WIDTH && pacman_y >= 0 && pacman_y < WINDOW_HEIGHT &&
+			var->game.map[pacman_y * WINDOW_WIDTH + pacman_x] != '1' && (var->game.map[pacman_y * WINDOW_WIDTH + pacman_x] != 'E' || var->game.Collectlen == 0))
+		{
+			if (var->game.map[pacman_y * WINDOW_WIDTH + pacman_x] == 'C')
+			{
+				var->game.Collectlen--;
+				printf("Good job: %d\n", var->game.Collectlen);
+				if (var->game.Collectlen == 0)
+					printf("Got all Collectible\n");
+			}
+			if (var->game.map[pacman_y * WINDOW_WIDTH + pacman_x] == 'E')
+			{
+				printf("you won!\n");
+				exit(0);
+			}
+			var->game.map[var->game.Player] = '0';
+			var->game.Player = pacman_y * WINDOW_WIDTH + pacman_x;
+			var->game.map[var->game.Player] = 'P';
+		}
+
+		if (f % 16 == 0)
+			move_enemie(var, var->game.Player % WINDOW_WIDTH, var->game.Player / WINDOW_WIDTH, 0);
+	}
 	draw_map(var);
-	move_enemie(var);
+	mlx_put_image_to_window(var->mlx, var->win, var->img, 0, 0);
+
 	return (0);
 }
 int main(void)
@@ -757,8 +870,8 @@ int main(void)
 	}
 
 	var.mlx = mlx_init();
-	var.win = mlx_new_window(var.mlx, SCALE * WINDOW_WIDTH, SCALE * WINDOW_HEIGHT, "Pacman");
-	var.img = mlx_new_image(var.mlx, SCALE * WINDOW_WIDTH, SCALE * WINDOW_HEIGHT);
+	var.win = mlx_new_window(var.mlx, SCREEN_WIDTH, SCREEN_HEIGHT, "Pacman");
+	var.img = mlx_new_image(var.mlx, SCREEN_WIDTH, SCREEN_HEIGHT);
 	var.addr = mlx_get_data_addr(var.img, &var.bits_per_pixel, &var.line_length,
 								 &var.endian);
 

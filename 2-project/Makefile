@@ -11,20 +11,30 @@
 # **************************************************************************** #
 
 CC = cc
-#CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
 SRC = x.c
 NAME = ./a.out
 LIB = ./Libft/libft.a
+SAN = -fsanitize=address -g3
 
 #add line that make the libft if doesn't exists
 
 all : $(NAME)
 
-$(NAME) : $(SRC)
+$(LIB):
+	make -C ./Libft
+	make -C ./Libft clean
+
+$(NAME) : $(SRC) $(LIB)
 	$(CC) $(SRC) $(LIB) -lmlx -framework OpenGL -framework AppKit && ./a.out && rm -rf ./a.out
-	
+
+san:
+	$(CC) $(SRC) $(LIB) $(SAN) -lmlx -framework OpenGL -framework AppKit && ./a.out && rm -rf ./a.out
+
+wall: 
+	$(CC) $(CFLAGS) $(SAN) $(SRC) $(LIB) -lmlx -framework OpenGL -framework AppKit && ./a.out && rm -rf ./a.out
 
 # -O2
 #-fsanitize=address -g3
