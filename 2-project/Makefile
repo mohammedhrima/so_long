@@ -15,10 +15,9 @@ CFLAGS = -Wall -Wextra -Werror
 RM = rm -rf
 
 SRC = x.c
-NAME = ./a.out
+NAME = ./so_long
 LIB = ./Libft/libft.a
 SAN = -fsanitize=address -g3
-
 #add line that make the libft if doesn't exists
 
 all : $(NAME)
@@ -28,13 +27,13 @@ $(LIB):
 	make -C ./Libft clean
 
 $(NAME) : $(SRC) $(LIB)
-	$(CC) $(SRC) $(LIB) -lmlx -framework OpenGL -framework AppKit && ./a.out && rm -rf ./a.out
+	$(CC) $(SRC) $(LIB)  -lmlx -framework OpenGL -framework AppKit -o so_long
 
 san:
-	$(CC) $(SRC) $(LIB) $(SAN) -lmlx -framework OpenGL -framework AppKit && ./a.out && rm -rf ./a.out
+	$(CC) $(SRC) $(LIB) $(SAN) -lmlx -framework OpenGL -framework AppKit -o so_long
 
 wall: 
-	$(CC) $(CFLAGS) $(SAN) $(SRC) $(LIB) -lmlx -framework OpenGL -framework AppKit && ./a.out && rm -rf ./a.out
+	$(CC) $(CFLAGS) $(SAN) $(SRC) $(LIB) -lmlx -framework OpenGL -framework AppKit -o so_long
 
 # -O2
 #-fsanitize=address -g3
